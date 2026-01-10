@@ -2,7 +2,7 @@
   "name": "vscode-xcode-manager",
   "displayName": "Xcode File Manager",
   "description": "Manage Xcode project files and folders directly from VS Code",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.75.0"
   },
