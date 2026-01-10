@@ -253,8 +253,8 @@ export async function createFileAndAddToXcode(context: vscode.ExtensionContext) 
 
     const outputDir = await vscode.window.showInputBox({
       prompt: 'Enter the output directory (relative to workspace)',
-      placeHolder: 'FigmaUIToCodeDemo/FigmaUIToCodeDemo',
-      value: 'FigmaUIToCodeDemo/FigmaUIToCodeDemo'
+      placeHolder: '/',
+      value: '/'
     });
 
     if (!outputDir) {
@@ -314,8 +314,8 @@ export async function createFolderAndAddToXcode(context: vscode.ExtensionContext
 
     const parentDir = await vscode.window.showInputBox({
       prompt: 'Enter the parent directory (relative to workspace)',
-      placeHolder: 'FigmaUIToCodeDemo/FigmaUIToCodeDemo',
-      value: 'FigmaUIToCodeDemo/FigmaUIToCodeDemo'
+      placeHolder: '/',
+      value: '/'
     });
 
     if (!parentDir) {
