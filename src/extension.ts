@@ -3,7 +3,11 @@ import {
   addFileToXcode, 
   addFolderToXcode, 
   createFileAndAddToXcode, 
-  createFolderAndAddToXcode 
+  createFolderAndAddToXcode,
+  removeFileReferenceFromXcode,
+  removeFolderReferenceFromXcode,
+  deleteFileFromXcode,
+  deleteFolderFromXcode
 } from './commands/xcodeCommands';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -33,12 +37,40 @@ export function activate(context: vscode.ExtensionContext) {
     () => createFolderAndAddToXcode(context)
   );
 
+  // Register command: Remove File Reference from Xcode
+  const removeFileReferenceCommand = vscode.commands.registerCommand(
+    'extension.removeFileReferenceFromXcode',
+    (uri: vscode.Uri, uris?: vscode.Uri[]) => removeFileReferenceFromXcode(context, uri, uris)
+  );
+
+  // Register command: Remove Folder Reference from Xcode
+  const removeFolderReferenceCommand = vscode.commands.registerCommand(
+    'extension.removeFolderReferenceFromXcode',
+    (uri: vscode.Uri, uris?: vscode.Uri[]) => removeFolderReferenceFromXcode(context, uri, uris)
+  );
+
+  // Register command: Delete File from Xcode
+  const deleteFileCommand = vscode.commands.registerCommand(
+    'extension.deleteFileFromXcode',
+    (uri: vscode.Uri, uris?: vscode.Uri[]) => deleteFileFromXcode(context, uri, uris)
+  );
+
+  // Register command: Delete Folder from Xcode
+  const deleteFolderCommand = vscode.commands.registerCommand(
+    'extension.deleteFolderFromXcode',
+    (uri: vscode.Uri, uris?: vscode.Uri[]) => deleteFolderFromXcode(context, uri, uris)
+  );
+
   // Add all commands to subscriptions
   context.subscriptions.push(
     addFileCommand,
     addFolderCommand,
     createFileCommand,
-    createFolderCommand
+    createFolderCommand,
+    removeFileReferenceCommand,
+    removeFolderReferenceCommand,
+    deleteFileCommand,
+    deleteFolderCommand
   );
 }
 

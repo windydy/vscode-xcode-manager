@@ -2,7 +2,7 @@
   "name": "vscode-xcode-manager",
   "displayName": "Xcode File Manager",
   "description": "Manage Xcode project files and folders directly from VS Code",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -33,6 +33,22 @@
       {
         "command": "extension.createFolderAndAddToXcode",
         "title": "Create Folder and Add to Xcode"
+      },
+      {
+        "command": "extension.removeFileReferenceFromXcode",
+        "title": "Remove File Reference from Xcode"
+      },
+      {
+        "command": "extension.removeFolderReferenceFromXcode",
+        "title": "Remove Folder Reference from Xcode"
+      },
+      {
+        "command": "extension.deleteFileFromXcode",
+        "title": "Delete File and Remove from Xcode"
+      },
+      {
+        "command": "extension.deleteFolderFromXcode",
+        "title": "Delete Folder and Remove from Xcode"
       }
     ],
     "menus": {
@@ -54,6 +70,26 @@
         {
           "command": "extension.createFolderAndAddToXcode",
           "group": "xcode@4"
+        },
+        {
+          "command": "extension.removeFileReferenceFromXcode",
+          "group": "xcode_remove@1",
+          "when": "!explorerResourceIsFolder"
+        },
+        {
+          "command": "extension.removeFolderReferenceFromXcode",
+          "group": "xcode_remove@2",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "extension.deleteFileFromXcode",
+          "group": "xcode_remove@3",
+          "when": "!explorerResourceIsFolder"
+        },
+        {
+          "command": "extension.deleteFolderFromXcode",
+          "group": "xcode_remove@4",
+          "when": "explorerResourceIsFolder"
         }
       ],
       "commandPalette": [
@@ -69,6 +105,22 @@
         },
         {
           "command": "extension.addFolderToXcode",
+          "when": "false"
+        },
+        {
+          "command": "extension.removeFileReferenceFromXcode",
+          "when": "false"
+        },
+        {
+          "command": "extension.removeFolderReferenceFromXcode",
+          "when": "false"
+        },
+        {
+          "command": "extension.deleteFileFromXcode",
+          "when": "false"
+        },
+        {
+          "command": "extension.deleteFolderFromXcode",
           "when": "false"
         }
       ]
