@@ -11,9 +11,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/vscode-xcode-manager"
+    "url": "https://github.com/windydy/vscode-xcode-manager.git"
   },
-  "publisher": "your-publisher-name",
+  "publisher": "windydy",
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
