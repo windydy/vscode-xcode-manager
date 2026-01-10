@@ -63,9 +63,27 @@ FileUtils.mkdir_p(output_dir)
 
 generated_files = []
 
+# Get user info
+username = ENV['USER'] || 'Unknown'
+current_date = Time.now.strftime('%-m/%-d/%y')
+current_year = Time.now.year
+
+# Extract project name from xcodeproj path
+xcodeproj_path = find_xcodeproj(output_dir)
+project_name = File.basename(xcodeproj_path, '.xcodeproj')
+
 Dir.glob("#{template_dir}/*").each do |tpl|
-  content = File.read(tpl).gsub("___FILEBASENAME___", class_name)
   filename = File.basename(tpl).gsub("___FILEBASENAME___", class_name)
+  
+  # Read template and replace all placeholders
+  content = File.read(tpl)
+    .gsub("___FILEBASENAME___", class_name)
+    .gsub("___FILENAME___", filename)
+    .gsub("___PROJECTNAME___", project_name)
+    .gsub("___FULLUSERNAME___", username)
+    .gsub("___DATE___", current_date)
+    .gsub("___COPYRIGHT___", "Copyright © #{current_year} #{username}. All rights reserved.")
+  
   path = File.join(output_dir, filename)
 
   if File.exist?(path)
