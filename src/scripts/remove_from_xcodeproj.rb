@@ -33,18 +33,48 @@ end
 # ============================================================
 
 def find_xcodeproj(start_dir)
+  puts "🔍 Searching for .xcodeproj file starting from: #{start_dir}"
   current = Pathname.new(start_dir).expand_path
   
-  # Search up to 5 levels
-  5.times do
-    xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj")
+  # 首先检查当前目录及子目录
+  xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj", File::FNM_CASEFOLD)
+  puts "🔍 Found #{xcodeproj_files.length} .xcodeproj files in current directory and subdirectories: #{xcodeproj_files}"
+  return xcodeproj_files.first if xcodeproj_files.any?
+  
+  # 向上搜索更多层级（从5层增加到10层）
+  original_current = current
+  10.times do |level|
+    puts "🔍 Checking level #{level} at path: #{current}"
+    xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj", File::FNM_CASEFOLD)
+    puts "🔍 Found #{xcodeproj_files.length} .xcodeproj files at this level"
     return xcodeproj_files.first if xcodeproj_files.any?
     
     break if current.root?
     current = current.parent
+    puts "🔍 Going up to parent: #{current}"
   end
   
-  abort "❌ No .xcodeproj found."
+  # 如果还是找不到，尝试在更广范围搜索
+  # 检查常见项目根目录位置
+  possible_roots = [
+    "#{original_current}/../..",
+    "#{original_current}/../../..",
+    "#{Dir.pwd}"  # 当前工作目录
+  ]
+  
+  possible_roots.each do |root|
+    root_path = Pathname.new(root).expand_path
+    puts "🔍 Checking possible root: #{root_path}"
+    if File.exist?(root_path)
+      xcodeproj_files = Dir.glob("#{root_path}/**/*.xcodeproj", File::FNM_CASEFOLD)
+      puts "🔍 Found #{xcodeproj_files.length} .xcodeproj files in possible root: #{xcodeproj_files}"
+      return xcodeproj_files.first if xcodeproj_files.any?
+    else
+      puts "🔍 Skipping non-existent root: #{root_path}"
+    end
+  end
+  
+  abort "❌ No .xcodeproj found in #{start_dir} or its parent directories."
 end
 
 def find_file_references(project, file_path)
@@ -68,21 +98,28 @@ def remove_file_from_project(project, file_path)
   file_refs.each do |file_ref|
     # Remove from all build phases
     project.targets.each do |target|
-      target.source_build_phase.files.each do |build_file|
-        if build_file.file_ref == file_ref
-          build_file.remove_from_project
+      # Check if target responds to the specific build phase methods
+      if target.respond_to?(:source_build_phase) && !target.source_build_phase.nil?
+        target.source_build_phase.files.each do |build_file|
+          if build_file.file_ref == file_ref
+            build_file.remove_from_project
+          end
         end
       end
       
-      target.resources_build_phase.files.each do |build_file|
-        if build_file.file_ref == file_ref
-          build_file.remove_from_project
+      if target.respond_to?(:resources_build_phase) && !target.resources_build_phase.nil?
+        target.resources_build_phase.files.each do |build_file|
+          if build_file.file_ref == file_ref
+            build_file.remove_from_project
+          end
         end
       end
       
-      target.frameworks_build_phase.files.each do |build_file|
-        if build_file.file_ref == file_ref
-          build_file.remove_from_project
+      if target.respond_to?(:frameworks_build_phase) && !target.frameworks_build_phase.nil?
+        target.frameworks_build_phase.files.each do |build_file|
+          if build_file.file_ref == file_ref
+            build_file.remove_from_project
+          end
         end
       end
     end
@@ -125,7 +162,22 @@ def remove_group_from_project(project, group_path)
     group.files.each do |file_ref|
       # Remove from all build phases
       project.targets.each do |target|
-        [target.source_build_phase, target.resources_build_phase, target.frameworks_build_phase].each do |phase|
+        # Check if target responds to the specific build phase methods
+        phases_to_check = []
+        
+        if target.respond_to?(:source_build_phase) && !target.source_build_phase.nil?
+          phases_to_check << target.source_build_phase
+        end
+        
+        if target.respond_to?(:resources_build_phase) && !target.resources_build_phase.nil?
+          phases_to_check << target.resources_build_phase
+        end
+        
+        if target.respond_to?(:frameworks_build_phase) && !target.frameworks_build_phase.nil?
+          phases_to_check << target.frameworks_build_phase
+        end
+        
+        phases_to_check.each do |phase|
           phase.files.each do |build_file|
             if build_file.file_ref == file_ref
               build_file.remove_from_project
@@ -206,3 +258,6 @@ if mode == 'trash'
 end
 
 puts "🎉 Done!"
+
+
+

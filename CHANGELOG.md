@@ -1,5 +1,23 @@
 # Xcode File Manager - Change Log
 
+## [0.1.1] - 2026-01-11
+
+### Fixed
+
+- **Target Type Compatibility**: Fixed issue where script would fail on PBXAggregateTarget and other special target types
+  - Added `respond_to?` checks before accessing build phases
+  - Added nil checks for build phase objects
+  - Improved handling of different Xcode project target types
+- **Enhanced Logging**: Improved diagnostic logging for project path discovery
+  - Added detailed logs to `find_xcodeproj` function
+  - Better visibility into project search process
+  - More informative error messages
+
+### Changed
+
+- Updated remove_from_xcodeproj.rb script for better compatibility
+- Enhanced error reporting in extension commands
+
 ## [0.1.0] - 2026-01-11
 
 ### Added

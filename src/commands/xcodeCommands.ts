@@ -12,10 +12,17 @@ async function executeRubyScript(scriptPath: string, args: string[]): Promise<st
   try {
     const { stdout, stderr } = await execFileAsync('ruby', [scriptPath, ...args]);
     if (stderr) {
-      console.error('Ruby script stderr:', stderr);
+      // 将 stderr 也视为有用的调试信息，不仅是在错误情况下
+      console.error('Ruby script stderr/output:', stderr);
+    }
+    if (stdout) {
+      console.log('Ruby script stdout:', stdout);
     }
     return stdout;
   } catch (error: any) {
+    // 在错误情况下也输出完整的 stderr
+    console.error('Ruby script execution error:', error);
+    console.error('Full stderr from Ruby script:', error.stderr || '');
     throw new Error(`Ruby script failed: ${error.message}\n${error.stderr || ''}`);
   }
 }
@@ -384,7 +391,7 @@ export async function removeFromXcode(context: vscode.ExtensionContext, uri: vsc
     if (confirm !== 'Yes') {
       return;
     }
-    
+
     const scriptPath = getScriptPath(context, 'remove_from_xcodeproj.rb');
     
     // Process each target
