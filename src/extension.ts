@@ -12,9 +12,19 @@ import {
   renameFolderInXcode,
   fixXcodeReferences
 } from './commands/xcodeCommands';
+import { XcodeFileWatcher } from './fileWatcher';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Xcode File Manager extension is now active');
+
+  // Initialize file watcher
+  const fileWatcher = new XcodeFileWatcher(context);
+  
+  // Auto-start file watcher if enabled in settings
+  const config = vscode.workspace.getConfiguration('xcodeFileManager');
+  if (config.get('autoSync', true)) {
+    fileWatcher.start();
+  }
 
   // Register command: Add File to Xcode
   const addFileCommand = vscode.commands.registerCommand(
@@ -82,6 +92,18 @@ export function activate(context: vscode.ExtensionContext) {
     (uri?: vscode.Uri) => fixXcodeReferences(context, uri)
   );
 
+  // Register command: Toggle Auto Sync
+  const toggleAutoSyncCommand = vscode.commands.registerCommand(
+    'extension.toggleXcodeAutoSync',
+    () => {
+      fileWatcher.toggle();
+      
+      // Update configuration
+      const config = vscode.workspace.getConfiguration('xcodeFileManager');
+      config.update('autoSync', fileWatcher.isEnabled(), vscode.ConfigurationTarget.Workspace);
+    }
+  );
+
   // Add all commands to subscriptions
   context.subscriptions.push(
     addFileCommand,
@@ -94,10 +116,13 @@ export function activate(context: vscode.ExtensionContext) {
     deleteFolderCommand,
     renameFileCommand,
     renameFolderCommand,
-    fixReferencesCommand
+    fixReferencesCommand,
+    toggleAutoSyncCommand,
+    fileWatcher
   );
 }
 
 export function deactivate() {
   console.log('Xcode File Manager extension is now deactivated');
 }
+
