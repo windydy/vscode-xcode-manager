@@ -1,5 +1,48 @@
 # Xcode File Manager - Change Log
 
+## [0.2.0] - 2026-01-15
+
+### Added
+
+- **Rename Operations**:
+  - Rename file and automatically update Xcode project references
+  - Rename folder and update all file paths in Xcode project
+  - Smart path updates for all affected files and subfolders
+
+- **Fix Xcode References**:
+  - Manually fix broken references after moving files/folders
+  - Smart file matching algorithm to find relocated files
+  - Automatic empty group cleanup
+  - Can be triggered from context menu or command palette
+
+- **Auto-Sync File Moves** (Default Enabled):
+  - Automatically detect and sync file/folder moves to Xcode
+  - Intelligent move detection (delete + create within 2 seconds)
+  - Only monitors files within Xcode project directory
+  - Configurable via `xcodeFileManager.autoSync` setting
+  - Toggle on/off with "Toggle Xcode Auto-Sync" command
+  - 500ms debounce to optimize performance
+  - Background processing without interrupting workflow
+
+- **Unified Menu Structure**:
+  - All commands organized under "Xcode File Manager" submenu
+  - Categorized groups: Add, Create, Rename, Remove, Delete, Fix
+  - Context-aware commands (file vs folder)
+
+### Changed
+
+- Default auto-sync enabled for better user experience
+- Improved file watcher to only monitor Xcode project directory
+- Enhanced error handling with detailed logging
+- Better JSON output validation from Ruby scripts
+
+### Fixed
+
+- File reference paths correctly updated when moving files
+- Empty groups automatically cleaned up after file moves
+- Folder moves now properly update all contained files
+- Improved error messages for debugging
+
 ## [0.1.1] - 2026-01-11
 
 ### Fixed
