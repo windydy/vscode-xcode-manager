@@ -17,16 +17,19 @@ end
 def find_xcodeproj(start_dir)
   current = Pathname.new(start_dir).expand_path
   
-  # Search up to 5 levels
-  5.times do
-    xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj")
+  # First, search upward from the start directory
+  temp = current
+  while !temp.root?
+    xcodeproj_files = Dir.glob("#{temp}/*.xcodeproj")
     return xcodeproj_files.first if xcodeproj_files.any?
-    
-    break if current.root?
-    current = current.parent
+    temp = temp.parent
   end
   
-  abort "❌ No .xcodeproj found."
+  # If not found going up, search recursively downward from the original directory
+  xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj")
+  return xcodeproj_files.first if xcodeproj_files.any?
+  
+  abort "❌ No .xcodeproj found. Please ensure you're working in an Xcode project directory."
 end
 
 # Get the first argument to find project
@@ -135,8 +138,11 @@ input_files.each do |file_path|
 
   file_ref = current_group.new_file(filename)
 
-  # Add to build phase
+  # Add to build phase (only for native targets)
   project.targets.each do |target|
+    # Skip non-native targets (e.g., PBXAggregateTarget)
+    next unless target.is_a?(Xcodeproj::Project::Object::PBXNativeTarget)
+    
     case file_path.extname
     when '.m', '.mm', '.swift'
       target.source_build_phase.add_file_reference(file_ref)

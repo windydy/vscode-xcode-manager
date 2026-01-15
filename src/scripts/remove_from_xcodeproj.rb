@@ -33,48 +33,21 @@ end
 # ============================================================
 
 def find_xcodeproj(start_dir)
-  puts "🔍 Searching for .xcodeproj file starting from: #{start_dir}"
   current = Pathname.new(start_dir).expand_path
   
-  # 首先检查当前目录及子目录
-  xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj", File::FNM_CASEFOLD)
-  puts "🔍 Found #{xcodeproj_files.length} .xcodeproj files in current directory and subdirectories: #{xcodeproj_files}"
+  # First, search upward from the start directory
+  temp = current
+  while !temp.root?
+    xcodeproj_files = Dir.glob("#{temp}/*.xcodeproj")
+    return xcodeproj_files.first if xcodeproj_files.any?
+    temp = temp.parent
+  end
+  
+  # If not found going up, search recursively downward from the original directory
+  xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj")
   return xcodeproj_files.first if xcodeproj_files.any?
   
-  # 向上搜索更多层级（从5层增加到10层）
-  original_current = current
-  10.times do |level|
-    puts "🔍 Checking level #{level} at path: #{current}"
-    xcodeproj_files = Dir.glob("#{current}/**/*.xcodeproj", File::FNM_CASEFOLD)
-    puts "🔍 Found #{xcodeproj_files.length} .xcodeproj files at this level"
-    return xcodeproj_files.first if xcodeproj_files.any?
-    
-    break if current.root?
-    current = current.parent
-    puts "🔍 Going up to parent: #{current}"
-  end
-  
-  # 如果还是找不到，尝试在更广范围搜索
-  # 检查常见项目根目录位置
-  possible_roots = [
-    "#{original_current}/../..",
-    "#{original_current}/../../..",
-    "#{Dir.pwd}"  # 当前工作目录
-  ]
-  
-  possible_roots.each do |root|
-    root_path = Pathname.new(root).expand_path
-    puts "🔍 Checking possible root: #{root_path}"
-    if File.exist?(root_path)
-      xcodeproj_files = Dir.glob("#{root_path}/**/*.xcodeproj", File::FNM_CASEFOLD)
-      puts "🔍 Found #{xcodeproj_files.length} .xcodeproj files in possible root: #{xcodeproj_files}"
-      return xcodeproj_files.first if xcodeproj_files.any?
-    else
-      puts "🔍 Skipping non-existent root: #{root_path}"
-    end
-  end
-  
-  abort "❌ No .xcodeproj found in #{start_dir} or its parent directories."
+  abort "❌ No .xcodeproj found. Please ensure you're working in an Xcode project directory."
 end
 
 def find_file_references(project, file_path)

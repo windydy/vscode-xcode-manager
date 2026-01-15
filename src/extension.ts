@@ -7,7 +7,10 @@ import {
   removeFileReferenceFromXcode,
   removeFolderReferenceFromXcode,
   deleteFileFromXcode,
-  deleteFolderFromXcode
+  deleteFolderFromXcode,
+  renameFileInXcode,
+  renameFolderInXcode,
+  fixXcodeReferences
 } from './commands/xcodeCommands';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -28,13 +31,13 @@ export function activate(context: vscode.ExtensionContext) {
   // Register command: Create File and Add to Xcode
   const createFileCommand = vscode.commands.registerCommand(
     'extension.createFileAndAddToXcode',
-    () => createFileAndAddToXcode(context)
+    (uri?: vscode.Uri) => createFileAndAddToXcode(context, uri)
   );
 
   // Register command: Create Folder and Add to Xcode
   const createFolderCommand = vscode.commands.registerCommand(
     'extension.createFolderAndAddToXcode',
-    () => createFolderAndAddToXcode(context)
+    (uri?: vscode.Uri) => createFolderAndAddToXcode(context, uri)
   );
 
   // Register command: Remove File Reference from Xcode
@@ -61,6 +64,24 @@ export function activate(context: vscode.ExtensionContext) {
     (uri: vscode.Uri, uris?: vscode.Uri[]) => deleteFolderFromXcode(context, uri, uris)
   );
 
+  // Register command: Rename File in Xcode
+  const renameFileCommand = vscode.commands.registerCommand(
+    'extension.renameFileInXcode',
+    (uri: vscode.Uri) => renameFileInXcode(context, uri)
+  );
+
+  // Register command: Rename Folder in Xcode
+  const renameFolderCommand = vscode.commands.registerCommand(
+    'extension.renameFolderInXcode',
+    (uri: vscode.Uri) => renameFolderInXcode(context, uri)
+  );
+
+  // Register command: Fix Xcode References
+  const fixReferencesCommand = vscode.commands.registerCommand(
+    'extension.fixXcodeReferences',
+    (uri?: vscode.Uri) => fixXcodeReferences(context, uri)
+  );
+
   // Add all commands to subscriptions
   context.subscriptions.push(
     addFileCommand,
@@ -70,7 +91,10 @@ export function activate(context: vscode.ExtensionContext) {
     removeFileReferenceCommand,
     removeFolderReferenceCommand,
     deleteFileCommand,
-    deleteFolderCommand
+    deleteFolderCommand,
+    renameFileCommand,
+    renameFolderCommand,
+    fixReferencesCommand
   );
 }
 

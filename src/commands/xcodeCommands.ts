@@ -73,7 +73,7 @@ export async function addFolderToXcode(context: vscode.ExtensionContext, uri: vs
 /**
  * Create new file and add to Xcode
  */
-export async function createFileAndAddToXcode(context: vscode.ExtensionContext) {
+export async function createFileAndAddToXcode(context: vscode.ExtensionContext, uri?: vscode.Uri) {
   try {
     // Get template type
     const templateType = await vscode.window.showQuickPick(
@@ -258,10 +258,31 @@ export async function createFileAndAddToXcode(context: vscode.ExtensionContext) 
       return;
     }
 
+    // Calculate default directory from uri if provided
+    let defaultDir = '/';
+    if (uri) {
+      const stats = await vscode.workspace.fs.stat(uri);
+      let targetPath = uri.fsPath;
+      
+      // If it's a file, use its parent directory
+      if (stats.type === vscode.FileType.File) {
+        targetPath = path.dirname(targetPath);
+      }
+      
+      // Calculate relative path from workspace
+      const workspacePath = workspaceFolders[0].uri.fsPath;
+      defaultDir = path.relative(workspacePath, targetPath) || '/';
+      
+      // Ensure forward slashes for consistency
+      if (defaultDir !== '/') {
+        defaultDir = defaultDir.replace(/\\/g, '/');
+      }
+    }
+
     const outputDir = await vscode.window.showInputBox({
       prompt: 'Enter the output directory (relative to workspace)',
       placeHolder: '/',
-      value: '/'
+      value: defaultDir
     });
 
     if (!outputDir) {
@@ -296,7 +317,7 @@ export async function createFileAndAddToXcode(context: vscode.ExtensionContext) 
 /**
  * Create new folder and add to Xcode
  */
-export async function createFolderAndAddToXcode(context: vscode.ExtensionContext) {
+export async function createFolderAndAddToXcode(context: vscode.ExtensionContext, uri?: vscode.Uri) {
   try {
     const folderName = await vscode.window.showInputBox({
       prompt: 'Enter the folder name',
@@ -319,10 +340,31 @@ export async function createFolderAndAddToXcode(context: vscode.ExtensionContext
       return;
     }
 
+    // Calculate default parent directory from uri if provided
+    let defaultParentDir = '/';
+    if (uri) {
+      const stats = await vscode.workspace.fs.stat(uri);
+      let targetPath = uri.fsPath;
+      
+      // If it's a file, use its parent directory
+      if (stats.type === vscode.FileType.File) {
+        targetPath = path.dirname(targetPath);
+      }
+      
+      // Calculate relative path from workspace
+      const workspacePath = workspaceFolders[0].uri.fsPath;
+      defaultParentDir = path.relative(workspacePath, targetPath) || '/';
+      
+      // Ensure forward slashes for consistency
+      if (defaultParentDir !== '/') {
+        defaultParentDir = defaultParentDir.replace(/\\/g, '/');
+      }
+    }
+
     const parentDir = await vscode.window.showInputBox({
       prompt: 'Enter the parent directory (relative to workspace)',
       placeHolder: '/',
-      value: '/'
+      value: defaultParentDir
     });
 
     if (!parentDir) {
@@ -333,8 +375,8 @@ export async function createFolderAndAddToXcode(context: vscode.ExtensionContext
     const newFolderPath = path.join(fullParentPath, folderName);
 
     // Create directory using VS Code API
-    const uri = vscode.Uri.file(newFolderPath);
-    await vscode.workspace.fs.createDirectory(uri);
+    const newFolderUri = vscode.Uri.file(newFolderPath);
+    await vscode.workspace.fs.createDirectory(newFolderUri);
 
     // Add to Xcode
     const scriptPath = getScriptPath(context, 'add_to_xcodeproj.rb');
@@ -454,4 +496,140 @@ export async function deleteFileFromXcode(context: vscode.ExtensionContext, uri:
  */
 export async function deleteFolderFromXcode(context: vscode.ExtensionContext, uri: vscode.Uri, uris?: vscode.Uri[]) {
   return removeFromXcode(context, uri, uris, true);
+}
+
+/**
+ * Rename file and update Xcode project
+ */
+export async function renameFileInXcode(context: vscode.ExtensionContext, uri: vscode.Uri) {
+  try {
+    const oldPath = uri.fsPath;
+    const oldName = path.basename(oldPath);
+    
+    // Check if it's a file
+    const stat = await vscode.workspace.fs.stat(uri);
+    if (stat.type === vscode.FileType.Directory) {
+      vscode.window.showErrorMessage('This is a folder. Use "Rename Folder in Xcode" instead.');
+      return;
+    }
+    
+    // Ask for new name
+    const newName = await vscode.window.showInputBox({
+      prompt: 'Enter the new file name',
+      value: oldName,
+      valueSelection: [0, oldName.lastIndexOf('.') > 0 ? oldName.lastIndexOf('.') : oldName.length],
+      validateInput: (value) => {
+        if (!value || value.trim().length === 0) {
+          return 'File name cannot be empty';
+        }
+        if (value === oldName) {
+          return 'New name is the same as the old name';
+        }
+        if (value.includes('/') || value.includes('\\')) {
+          return 'File name cannot contain path separators';
+        }
+        return null;
+      }
+    });
+    
+    if (!newName) {
+      return;
+    }
+    
+    const scriptPath = getScriptPath(context, 'rename_file.rb');
+    
+    vscode.window.showInformationMessage(`Renaming file: ${oldName} → ${newName}`);
+    
+    const output = await executeRubyScript(scriptPath, [oldPath, newName]);
+    vscode.window.showInformationMessage(`✅ Successfully renamed file to: ${newName}`);
+    console.log(output);
+  } catch (error: any) {
+    vscode.window.showErrorMessage(`Failed to rename file: ${error.message}`);
+  }
+}
+
+/**
+ * Rename folder and update Xcode project (including all files and subfolders)
+ */
+export async function renameFolderInXcode(context: vscode.ExtensionContext, uri: vscode.Uri) {
+  try {
+    const oldPath = uri.fsPath;
+    const oldName = path.basename(oldPath);
+    
+    // Check if it's a folder
+    const stat = await vscode.workspace.fs.stat(uri);
+    if (stat.type !== vscode.FileType.Directory) {
+      vscode.window.showErrorMessage('This is a file. Use "Rename File in Xcode" instead.');
+      return;
+    }
+    
+    // Ask for new name
+    const newName = await vscode.window.showInputBox({
+      prompt: 'Enter the new folder name',
+      value: oldName,
+      valueSelection: [0, oldName.length],
+      validateInput: (value) => {
+        if (!value || value.trim().length === 0) {
+          return 'Folder name cannot be empty';
+        }
+        if (value === oldName) {
+          return 'New name is the same as the old name';
+        }
+        if (value.includes('/') || value.includes('\\')) {
+          return 'Folder name cannot contain path separators';
+        }
+        return null;
+      }
+    });
+    
+    if (!newName) {
+      return;
+    }
+    
+    const scriptPath = getScriptPath(context, 'rename_folder.rb');
+    
+    vscode.window.showInformationMessage(`Renaming folder: ${oldName} → ${newName}`);
+    
+    const output = await executeRubyScript(scriptPath, [oldPath, newName]);
+    vscode.window.showInformationMessage(`✅ Successfully renamed folder to: ${newName}`);
+    console.log(output);
+  } catch (error: any) {
+    vscode.window.showErrorMessage(`Failed to rename folder: ${error.message}`);
+  }
+}
+
+/**
+ * Fix broken Xcode references after manually moving files/folders
+ */
+export async function fixXcodeReferences(context: vscode.ExtensionContext, uri?: vscode.Uri) {
+  try {
+    // Use provided URI or workspace root
+    const targetPath = uri ? uri.fsPath : vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    
+    if (!targetPath) {
+      vscode.window.showErrorMessage('No workspace folder found');
+      return;
+    }
+    
+    const scriptPath = getScriptPath(context, 'fix_references.rb');
+    
+    vscode.window.showInformationMessage('🔍 Scanning for broken Xcode references...');
+    
+    const output = await executeRubyScript(scriptPath, [targetPath]);
+    
+    // Check if any fixes were made
+    if (output.includes('No broken references found')) {
+      vscode.window.showInformationMessage('✅ All Xcode references are valid!');
+    } else if (output.includes('Fixed')) {
+      const match = output.match(/Fixed (\d+) reference/);
+      const count = match ? match[1] : 'some';
+      vscode.window.showInformationMessage(`✅ Fixed ${count} Xcode reference(s)!`);
+    } else {
+      vscode.window.showInformationMessage('✅ Xcode reference scan completed');
+    }
+    
+    console.log(output);
+  } catch (error: any) {
+    vscode.window.showErrorMessage(`Failed to fix Xcode references: ${error.message}`);
+  }
 }

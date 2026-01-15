@@ -49,47 +49,85 @@
       {
         "command": "extension.deleteFolderFromXcode",
         "title": "Delete Folder and Remove from Xcode"
+      },
+      {
+        "command": "extension.renameFileInXcode",
+        "title": "Rename File in Xcode"
+      },
+      {
+        "command": "extension.renameFolderInXcode",
+        "title": "Rename Folder in Xcode"
+      },
+      {
+        "command": "extension.fixXcodeReferences",
+        "title": "Fix Xcode References"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "xcode.fileManager",
+        "label": "Xcode File Manager"
       }
     ],
     "menus": {
       "explorer/context": [
         {
+          "submenu": "xcode.fileManager",
+          "group": "2_workspace"
+        }
+      ],
+      "xcode.fileManager": [
+        {
           "command": "extension.addFileToXcode",
-          "group": "xcode@1",
+          "group": "1_add@1",
           "when": "!explorerResourceIsFolder"
         },
         {
           "command": "extension.addFolderToXcode",
-          "group": "xcode@2",
+          "group": "1_add@2",
           "when": "explorerResourceIsFolder"
         },
         {
           "command": "extension.createFileAndAddToXcode",
-          "group": "xcode@3"
+          "group": "2_create@1"
         },
         {
           "command": "extension.createFolderAndAddToXcode",
-          "group": "xcode@4"
+          "group": "2_create@2"
+        },
+        {
+          "command": "extension.renameFileInXcode",
+          "group": "3_rename@1",
+          "when": "!explorerResourceIsFolder"
+        },
+        {
+          "command": "extension.renameFolderInXcode",
+          "group": "3_rename@2",
+          "when": "explorerResourceIsFolder"
         },
         {
           "command": "extension.removeFileReferenceFromXcode",
-          "group": "xcode_remove@1",
+          "group": "4_remove@1",
           "when": "!explorerResourceIsFolder"
         },
         {
           "command": "extension.removeFolderReferenceFromXcode",
-          "group": "xcode_remove@2",
+          "group": "4_remove@2",
           "when": "explorerResourceIsFolder"
         },
         {
           "command": "extension.deleteFileFromXcode",
-          "group": "xcode_remove@3",
+          "group": "5_delete@1",
           "when": "!explorerResourceIsFolder"
         },
         {
           "command": "extension.deleteFolderFromXcode",
-          "group": "xcode_remove@4",
+          "group": "5_delete@2",
           "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "extension.fixXcodeReferences",
+          "group": "6_fix@1"
         }
       ],
       "commandPalette": [
@@ -122,6 +160,17 @@
         {
           "command": "extension.deleteFolderFromXcode",
           "when": "false"
+        },
+        {
+          "command": "extension.renameFileInXcode",
+          "when": "false"
+        },
+        {
+          "command": "extension.renameFolderInXcode",
+          "when": "false"
+        },
+        {
+          "command": "extension.fixXcodeReferences"
         }
       ]
     }
